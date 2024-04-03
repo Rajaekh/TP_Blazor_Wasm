@@ -1,0 +1,56 @@
+﻿@page "/prodDetail/{id:int}"
+@inject IProductService ProductService
+@using BlazorApp.Models
+@inject NavigationManager NavigationManager
+<h3>Product Details</h3>
+
+@if (prod != null)
+{
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-2">
+                    <div class="card-body">
+                        <h4 class="card-title">@prod.Name</h4>
+                        <p class="card-text">Price: @prod.Price</p>
+                        <p class="card-text">Quantity: @prod.Qte</p>
+                        <p class="card-text">Description: @prod.Description</p>
+                        <p class="card-text">
+                            Categories:
+                            @if (prod.Categories != null )
+                            {
+                                @foreach (var cat in prod.Categories)
+                                {
+                                    <span class="badge badge-primary m-1">@cat.Name</span>
+                                }
+                            }
+                        </p>
+                        <button class="btn btn-primary" @onclick="BackToList"><i class="bi bi-arrow-left"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+else
+{
+    <p>Loading product details...</p>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    public Product prod { get; set; } = new Product();
+
+    protected override async Task OnInitializedAsync()
+    {
+        prod = await ProductService.GetProductById(Id);
+    }
+    private void BackToList()
+    {
+       
+        NavigationManager.NavigateTo("/Products");
+    }
+}

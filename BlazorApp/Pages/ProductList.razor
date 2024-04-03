@@ -1,0 +1,164 @@
+﻿@page "/Products"
+@inject IProductService ProductService
+@inject NavigationManager NavigationManager
+@using BlazorApp.Models
+@inject NavigationManager NavigationManager
+@attribute [StreamRendering(true)]
+<PageTitle>List Of Products</PageTitle>
+@if (ProductService.Products == null)
+{
+    <p><em>Loading.............</em></p>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-2">
+                <div class="col-md-6 mb-2">
+                    <a class="btn btn-outline-success" href="/AddProduct">Add Product</a>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="button-addon2" @bind="searchTerm">
+                        <button class="btn btn-outline-secondary" type="button" id="button-addon2" @onclick="SearchProducts">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+            <div class="table-responsive">
+                <table class="table table-bordered m-2">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Product Price</th>
+                            <th>Product Quantity</th>
+                            <th>Description</th>
+                            <th>Product Categories</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ProductService.Products != null && ProductService.Products.Any())
+                        {
+                            @foreach (var item in ProductService.Products)
+                            {
+                                <tr>
+                                    <td>@item.Name</td>
+                                    <td>@item.Price</td>
+                                    <td>@item.Qte</td>
+                                    <td>@item.Description</td>
+                                    <td>
+                                        @if (item.Categories != null && item.Categories.Any())
+                                        {
+                                            <ul>
+                                                @foreach (var cat in item.Categories)
+                                                {
+                                                    <span class="badge alert-primary m-1">@cat.Name</span>
+                                                    
+                                                }
+                                            </ul>
+                                        }
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-outline-primary btn-sm" @onclick="()=> EditProduct(item.Id)"><i class="bi bi-pencil-square"></i></button>
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="()=> DeleteProduct(item.Id)"><i class=" bi bi-trash"></i></button>
+                                        <button class="btn btn-outline-success btn-sm" @onclick="()=> ShowProduct(item.Id)"><i class="bi bi-ticket-detailed"></i></button>
+
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6">No products available</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            <div class="m-3">
+                <input type="button" class="btn-lg btn-outline-primary btn-sm" id="prev" @onclick="PrevPage" value="Pr" />
+
+                @for (int i = CurPage - 2; i <= CurPage + 2; i++)
+                {
+                    int j = i;
+                    @if (i > 0)
+                    {
+                        if (i == CurPage)
+                        {
+                            <span class="px-2" style="font-weight:bold;cursor:pointer" @onclick="() => ShowPage(j)">@i</span>
+                        }
+                        else
+                        {
+                            <span class="px-2" style="cursor:pointer" @onclick="() => ShowPage(j)">@i</span>
+                        }
+                    }
+
+                }
+                <input type="button" class="btn-lg btn btn-outline-primary btn-sm" id="next" @onclick="NextPage" value="Ne" />
+            </div>       
+            </div>
+        </div>
+   
+}
+@code {
+    private string searchTerm = "";
+    private int CurPage = 1;
+    protected override async Task OnInitializedAsync()
+    {
+        //await ProductService.GetProducts(searchTerm, CurPage);
+        await ShowPage();
+    }
+    private async Task SearchProducts()
+    {
+        await ProductService.GetProducts(searchTerm);
+    }
+    void ShowProduct(int id)
+    {
+        NavigationManager.NavigateTo($"prodDetail/{id}");
+    }
+    private void BackToList()
+    {
+        // Redirigez l'utilisateur vers la liste des produits sans enregistrer les modifications
+        NavigationManager.NavigateTo("/Products");
+    }
+    async void DeleteProduct(int id)
+    {
+        await ProductService.DeleteProduct(id);
+        await ProductService.GetProducts();
+       
+
+    }
+    void EditProduct(int id)
+    {
+        ///EditProduct/edit/
+        NavigationManager.NavigateTo($"EditProduct/edit/{id}");
+    }
+    protected async Task NextPage()
+    {
+        CurPage++;
+        await ShowPage();
+    }
+
+    protected async Task ShowPage(int i)
+    {
+        CurPage = i;
+        await ShowPage();
+    }
+
+    protected async Task PrevPage()
+    {
+        if (CurPage > 1)
+        {
+            CurPage--;
+            await ShowPage();
+        }
+    }
+
+    protected async Task ShowPage()
+    {
+        await ProductService.GetProducts(searchTerm, CurPage);
+    }
+}

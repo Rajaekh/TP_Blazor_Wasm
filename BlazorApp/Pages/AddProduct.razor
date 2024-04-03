@@ -1,0 +1,82 @@
+﻿@page "/AddProduct"
+@inject IProductService ProductService
+@using BlazorApp.Models
+@inject NavigationManager NavigationManager
+@inject ICategoryService CategoryService
+<PageTitle>Add Product</PageTitle>
+<div class="card">
+    <div class="card-body">
+        <div>
+            <div class="row">
+                <EditForm Model="@prodModel" OnValidSubmit="Save" OnInvalidSubmit="HandleInvalidSubmit">
+                    <DataAnnotationsValidator></DataAnnotationsValidator>
+                    <InputNumber @bind-Value="prodModel.Id" class="form-control" hidden />
+                    <div class="form-group">
+                        <label for="Name">Name</label>
+                        <InputText id="Name" @bind-Value="prodModel.Name" class="form-control" />
+                        <ValidationMessage For="@(()=>prodModel.Name)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Description">Description</label>
+                        <InputText id="Description" @bind-Value="prodModel.Description" class="form-control" />
+                        <ValidationMessage For="@(()=>prodModel.Description)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Price">Price</label>
+                        <InputNumber id="Price" @bind-Value="prodModel.Price" class="form-control" />
+                        <ValidationMessage For="@(()=>prodModel.Price)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Qte">Qte</label>
+                        <InputNumber id="Qte" @bind-Value="prodModel.Qte" class="form-control" />
+                        <ValidationMessage For="@(()=>prodModel.Qte)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Categories">Categories</label>
+                        <Select id="Categories" @bind-SelectedValues="prodModel.CategoriesId" Multiple Class="form-control">
+                            @foreach (var category in CategoryService.categories)
+                            {
+                                <SelectItem Value="@category.Id">@category.Name</SelectItem>
+                            }
+                        </Select>
+                    </div>
+                    <div class="py-2">
+                        <button type="submit" class="btn btn-outline-primary">Add</button>
+                        <button type="submit" class="btn btn-outline-secondary" @onclick=BackToList>Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code{
+    public CreateProductModel prodModel { get; set; } = new CreateProductModel();
+    protected override async Task OnInitializedAsync()
+    {
+
+        // //ici on recupere les categories donc la liste des categories declare dans le service va etre rempli donc on peut
+        await CategoryService.GetCategories();
+        prodModel.Id = 2;
+    }
+    private void BackToList()
+    {
+    // Redirigez l'utilisateur vers la liste des produits sans enregistrer les modifications
+    NavigationManager.NavigateTo("/Products");
+    }
+    private void HandleInvalidSubmit(EditContext editContext)
+    {
+        Console.WriteLine("Soumission de formulaire invalide");
+    }
+    private async Task Save(EditContext editContext)
+    {
+        if (!editContext.Validate())
+        {
+            Console.WriteLine("Le formulaire n'est pas valide");
+            return;
+        }
+
+        await ProductService.AddProduct(prodModel);
+        NavigationManager.NavigateTo("/Products");
+    }
+}
